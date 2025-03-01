@@ -15,9 +15,18 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->date('dob')->nullable();
             $table->string('address')->nullable();
             $table->string('avatar')->default('user/default_avatar.png');
             $table->enum('role', ['ADMIN', 'USER'])->default('USER');
+            $table->integer('period_duration')->nullable();
+            $table->enum('period_type', ['Regular', 'Irregular'])->nullable();
+            $table->integer('min_days')->nullable();
+            $table->integer('max_days')->nullable();
+            $table->integer('fixed_days')->nullable();
+            $table->date('last_period_date')->nullable();
+            $table->enum('phase_name', ['Follicular', 'Ovulation', 'Luteal', 'Menstrual'])->nullable();
+            $table->enum('subscription_type', ['Trial', 'Monthly', 'Annually'])->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('otp')->nullable()->unique();

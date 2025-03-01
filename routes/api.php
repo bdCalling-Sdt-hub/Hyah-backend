@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\Frontend\MyNoteController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
@@ -13,7 +14,8 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('otp-verification', [AuthController::class, 'otpVerify']);
         Route::post('forget-password', [AuthController::class, 'forgetPassword']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
-        Route::get('check-token', [AuthController::class, 'validateToken'])->name('validateToken');
+        Route::get('check-token', [AuthController::class, 'validateToken']);
+        Route::get('get-profile', [AuthController::class, 'getProfile']);
     });
 
     // verified user routes
@@ -27,7 +29,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
         // user routes
         Route::middleware('user')->as('user')->group(function () {
-
+            Route::apiResource('my-note', MyNoteController::class)->only('store', 'update', 'destroy');
         });
 
         // admin routes

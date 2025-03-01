@@ -98,8 +98,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users,email',
+            'name'     => 'sometimes|string|max:255',
+            'email'    => 'sometimes|email',
             'address'  => 'required|string|max:255',
             'password' => 'required|string|min:4',
         ]);
@@ -107,25 +107,46 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            $otp            = rand(100000, 999999);
+            $otp_expires_at = now()->addMinutes(10);
+            $user           = User::create([
+                'name'           => $request->name,
+                'email'          => $request->email,
+                'address'        => $request->address,
+                'password'       => Hash::make($request->password),
+                'role'           => 'USER',
+                'otp'            => $otp,
+                'otp_expires_at' => $otp_expires_at,
+                'status'         => 'active',
+            ]);
 
-        $otp            = rand(100000, 999999);
-        $otp_expires_at = now()->addMinutes(10);
-        $user           = User::create([
-            'name'           => $request->name,
-            'email'          => $request->email,
-            'address'        => $request->address,
-            'password'       => Hash::make($request->password),
-            'role'           => 'USER',
-            'otp'            => $otp,
-            'otp_expires_at' => $otp_expires_at,
-            'status'         => 'active',
+            Mail::to($request->email)->send(new OtpMail($otp));
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'An OTP sent to your registered email.',
+                'data'    => $user,
+            ], 200);
+        }
+        $user->update([
+            'name'=> $request->name ?? $user->name,
+            'email'=>$request->email ?? $user->email,
+            'address'=>$request->address,
+            'dob'=>$request->dob,
+            'period_duration'=>$request->period_duration,
+            'period_type'=>$request->period_type,
+            'min_days'=>$request->min_days,
+            'max_days'=>$request->max_days,
+            'fixed_days'=>$request->fixed_days,
+            'last_period_date'=>$request->last_period_date,
+            'phase_name'=>$request->phase_name,
+            'subscription_type'=>$request->subscription_type,
         ]);
-
-        Mail::to($request->email)->send(new OtpMail($otp));
-
         return response()->json([
             'status'  => true,
-            'message' => 'An OTP sent to your registered email.',
+            'message' => 'User update successfully.',
             'data'    => $user,
         ], 200);
     }
@@ -248,6 +269,19 @@ class AuthController extends Controller
                 'message' => 'User not authenticated.',
             ], 401);
         }
+    }
+
+    public function getProfile(Request $request)
+    {
+        $user = User::whereEmail($request->email)->first();
+        if (! $user) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'User not found.'], 200);
+        }
+        return response()->json([
+            'status' => true,
+            'data'   => $user], 200);
     }
 
     public function editProfile(Request $request)

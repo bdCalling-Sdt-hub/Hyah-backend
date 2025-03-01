@@ -26,8 +26,13 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'google_id',
+        'facebook_id',
+        'apple_id',
+        'twitter_id',
+        'otp',
+        'otp_expires_at',
     ];
-
     /**
      * Get the attributes that should be cast.
      *
@@ -51,7 +56,13 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    public function getAvatarAttribute($avatar){
-        return asset('uploads/'.$avatar);
+    public function getAvatarAttribute($avatar)
+    {
+        return asset('uploads/' . $avatar);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(MyNote::class);
     }
 }
